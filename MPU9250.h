@@ -48,26 +48,26 @@ class MPU9250{
       LP_ACCEL_ODR_250HZ = 10,
       LP_ACCEL_ODR_500HZ = 11
     };
-    MPU9250(I2C &bus,uint8_t address);
-    int begin();
+    MPU9250(I2C &bus,uint8_t address); //implemented
+    int begin(); //implemented
     int setAccelRange(AccelRange range);
-    int setGyroRange(GyroRange range);
-    int setDlpfBandwidth(DlpfBandwidth bandwidth);
-    int setSrd(uint8_t srd);
-    int enableDataReadyInterrupt();
+    int setGyroRange(GyroRange range); //implemented
+    int setDlpfBandwidth(DlpfBandwidth bandwidth); //implemented
+    int setSrd(uint8_t srd); //implemented
+    int enableDataReadyInterrupt(); 
     int disableDataReadyInterrupt();
     int enableWakeOnMotion(float womThresh_mg,LpAccelOdr odr);
-    int readSensor();
-    float getAccelX_mss();
-    float getAccelY_mss();
-    float getAccelZ_mss();
-    float getGyroX_rads();
-    float getGyroY_rads();
-    float getGyroZ_rads();
-    float getMagX_uT();
-    float getMagY_uT();
-    float getMagZ_uT();
-    float getTemperature_C();
+    int readSensor(); //implemented
+    float getAccelX_mss(); //implemented
+    float getAccelY_mss(); //implemented
+    float getAccelZ_mss(); //implemented
+    float getGyroX_rads(); //implemented
+    float getGyroY_rads(); //implemented
+    float getGyroZ_rads(); //implemented
+    float getMagX_uT();    //implemented
+    float getMagY_uT();    //implemented
+    float getMagZ_uT();    //implemented
+    float getTemperature_C();//implemented
     
     int calibrateGyro();
     float getGyroBiasX_rads();
@@ -96,7 +96,7 @@ class MPU9250{
     void setMagCalX(float bias,float scaleFactor);
     void setMagCalY(float bias,float scaleFactor);
     void setMagCalZ(float bias,float scaleFactor);
-  //protected:
+  protected:
     // i2c
     uint8_t _address;
     I2C *_i2c;
@@ -243,12 +243,12 @@ class MPU9250{
     const uint8_t AK8963_ASA = 0x10;
     const uint8_t AK8963_WHO_AM_I = 0x00;
     // private functions
-    int writeRegister(uint8_t subAddress, uint8_t data);
-    int readRegisters(uint8_t subAddress, uint8_t count, uint8_t* dest);
-    int writeAK8963Register(uint8_t subAddress, uint8_t data);
-    int readAK8963Registers(uint8_t subAddress, uint8_t count, uint8_t* dest);
-    int whoAmI();
-    int whoAmIAK8963();
+    int writeRegister(uint8_t subAddress, uint8_t data); //implemented
+    int readRegisters(uint8_t subAddress, uint8_t count, uint8_t* dest); //implemented
+    int writeAK8963Register(uint8_t subAddress, uint8_t data); //implemented
+    int readAK8963Registers(uint8_t subAddress, uint8_t count, uint8_t* dest); //implemented
+    int whoAmI(); //implemented
+    int whoAmIAK8963(); //implemented, fix needed. Once called, magnetometer stops updating.
 };
 
 class MPU9250FIFO: public MPU9250 {

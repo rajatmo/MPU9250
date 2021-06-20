@@ -1,26 +1,10 @@
-//#include "mbed.h"
-
-//#include "Examples/LEDPwm.h"
-
-//#include "Examples/servo1.h"
-
-//#include "Examples/Bluetooth_Display.h"
-
-//#include "Examples/ADXL_345_Display.h"
-
-//#include "aileron-pid.h"
-
-//#include "controller_input.h"
-
-//#include "I2C-test.h"
-
 #include "MPU9250.h"
-#include "pin_io.h"
 #include <cstdio>
 #include <string>
 
-
-DigitalOut led(LED_PIN);
+//Tested on F411RE blackpill minimum dev board, compiled for Nucleo F411RE.
+#define I2C1_SCL PB_6
+#define I2C1_SDA PB_7
 
 BufferedSerial serial(USBTX, USBRX, 115200);
 FILE * pc;
