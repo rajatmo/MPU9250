@@ -92,6 +92,15 @@ int MPU9250::writeAK8963Register(uint8_t subAddress, uint8_t data){
   }
 }
 
+int MPU9250::whoAmIAK8963(){
+  // read the WHO AM I register
+  if (readAK8963Registers(AK8963_WHO_AM_I,1,_buffer) < 0) {
+    return -1;
+  }
+  // return the register value
+  return _buffer[0];
+}
+
 /* sets the gyro full scale range to values other than default */
 int MPU9250::setGyroRange(GyroRange range) {
   switch(range) {
@@ -266,6 +275,21 @@ int MPU9250::readSensor() {
   return 1;
 }
 
+/* returns the accelerometer measurement in the x direction, m/s/s */
+float MPU9250::getAccelX_mss() {
+  return _ax;
+}
+
+/* returns the accelerometer measurement in the y direction, m/s/s */
+float MPU9250::getAccelY_mss() {
+  return _ay;
+}
+
+/* returns the accelerometer measurement in the z direction, m/s/s */
+float MPU9250::getAccelZ_mss() {
+  return _az;
+}
+
 /* returns the gyroscope measurement in the x direction, rad/s */
 float MPU9250::getGyroX_rads() {
   return _gx;
@@ -281,6 +305,25 @@ float MPU9250::getGyroZ_rads() {
   return _gz;
 }
 
+/* returns the magnetometer measurement in the x direction, uT */
+float MPU9250::getMagX_uT() {
+  return _hx;
+}
+
+/* returns the magnetometer measurement in the y direction, uT */
+float MPU9250::getMagY_uT() {
+  return _hy;
+}
+
+/* returns the magnetometer measurement in the z direction, uT */
+float MPU9250::getMagZ_uT() {
+  return _hz;
+}
+
+/* returns the die temperature, C */
+float MPU9250::getTemperature_C() {
+  return _t;
+}
 /* estimates the gyro biases */
 int MPU9250::calibrateGyro() {
   // set the range, bandwidth, and srd
@@ -321,7 +364,6 @@ int MPU9250::calibrateGyro() {
   }
   return 1;
 }
-
 
 /* starts communication with the MPU-9250 */
 int MPU9250::begin(){
@@ -437,11 +479,3 @@ int MPU9250::begin(){
 }
 
 
-int MPU9250::whoAmIAK8963(){
-  // read the WHO AM I register
-  if (readAK8963Registers(AK8963_WHO_AM_I,1,_buffer) < 0) {
-    return -1;
-  }
-  // return the register value
-  return _buffer[0];
-}
