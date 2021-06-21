@@ -1,4 +1,4 @@
 # MPU9250
-For mbedOS6, ported from Brian R Taylor's repo with minimal changes:
+For mbedOS6, ported from Brian R Taylor's(Bolderflight) repo with minimal changes:
 https://github.com/bolderflight/mpu9250-arduino
-Not all functions are implemented, will update README when I'm done.
+Functional, except from SPI interface(I don't have one) and inturrupt enable.

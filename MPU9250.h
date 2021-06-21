@@ -1,7 +1,7 @@
 /*
-Rajat Mandal
-
+********************************************************
 Ported from Brian Taylor's (Boulder Flight Systems) repo
+********************************************************
 */
 
 #ifndef MPU9250_h
@@ -46,13 +46,13 @@ public:
 	};
 	MPU9250(I2C& bus, uint8_t address); // implemented
 	int begin();                        // implemented
-	int setAccelRange(AccelRange range);
+	int setAccelRange(AccelRange range);// implemented
 	int setGyroRange(GyroRange range);             // implemented
 	int setDlpfBandwidth(DlpfBandwidth bandwidth); // implemented
 	int setSrd(uint8_t srd);                       // implemented
-	int enableDataReadyInterrupt();
-	int disableDataReadyInterrupt();
-	int enableWakeOnMotion(float womThresh_mg, LpAccelOdr odr);
+	int enableDataReadyInterrupt();                             //
+	int disableDataReadyInterrupt();                            // NOT IMPLEMENTED/TESTED.
+	int enableWakeOnMotion(float womThresh_mg, LpAccelOdr odr); //
 	int readSensor();         // implemented
 	float getAccelX_mss();    // implemented
 	float getAccelY_mss();    // implemented
@@ -65,33 +65,33 @@ public:
 	float getMagZ_uT();       // implemented
 	float getTemperature_C(); // implemented
 
-	int calibrateGyro(); // implemented
-	float getGyroBiasX_rads();
-	float getGyroBiasY_rads();
-	float getGyroBiasZ_rads();
-	void setGyroBiasX_rads(float bias);
-	void setGyroBiasY_rads(float bias);
-	void setGyroBiasZ_rads(float bias);
-	int calibrateAccel();
-	float getAccelBiasX_mss();
-	float getAccelScaleFactorX();
-	float getAccelBiasY_mss();
-	float getAccelScaleFactorY();
-	float getAccelBiasZ_mss();
-	float getAccelScaleFactorZ();
-	void setAccelCalX(float bias, float scaleFactor);
-	void setAccelCalY(float bias, float scaleFactor);
-	void setAccelCalZ(float bias, float scaleFactor);
-	int calibrateMag();
-	float getMagBiasX_uT();
-	float getMagScaleFactorX();
-	float getMagBiasY_uT();
-	float getMagScaleFactorY();
-	float getMagBiasZ_uT();
-	float getMagScaleFactorZ();
-	void setMagCalX(float bias, float scaleFactor);
-	void setMagCalY(float bias, float scaleFactor);
-	void setMagCalZ(float bias, float scaleFactor);
+	int calibrateGyro();        // implemented
+	float getGyroBiasX_rads();  // implemented
+	float getGyroBiasY_rads();  // implemented
+	float getGyroBiasZ_rads();  // implemented
+	void setGyroBiasX_rads(float bias); // implemented
+	void setGyroBiasY_rads(float bias); // implemented
+	void setGyroBiasZ_rads(float bias); // implemented
+	int calibrateAccel();               // implemented
+	float getAccelBiasX_mss();          // implemented
+	float getAccelScaleFactorX();       // implemented
+	float getAccelBiasY_mss();          // implemented
+	float getAccelScaleFactorY();       // implemented
+	float getAccelBiasZ_mss();          // implemented
+	float getAccelScaleFactorZ();       // implemented
+	void setAccelCalX(float bias, float scaleFactor);   // implemented
+	void setAccelCalY(float bias, float scaleFactor);   // implemented
+	void setAccelCalZ(float bias, float scaleFactor);   // implemented
+	int calibrateMag();         // implemented
+	float getMagBiasX_uT();     // implemented
+	float getMagScaleFactorX(); // implemented
+	float getMagBiasY_uT();     // implemented
+	float getMagScaleFactorY(); // implemented
+	float getMagBiasZ_uT();     // implemented
+	float getMagScaleFactorZ(); // implemented
+	void setMagCalX(float bias, float scaleFactor); // implemented
+	void setMagCalY(float bias, float scaleFactor); // implemented
+	void setMagCalZ(float bias, float scaleFactor); // implemented
 
 protected:
 	// i2c
@@ -249,36 +249,6 @@ protected:
 	int whoAmI();                           // implemented
 	int whoAmIAK8963(); // implemented, fix needed. Once called, magnetometer
 						// stops updating.
-};
-
-class MPU9250FIFO : public MPU9250 {
-public:
-	using MPU9250::MPU9250;
-	int enableFifo(bool accel, bool gyro, bool mag, bool temp);
-	int readFifo();
-	void getFifoAccelX_mss(size_t* size, float* data);
-	void getFifoAccelY_mss(size_t* size, float* data);
-	void getFifoAccelZ_mss(size_t* size, float* data);
-	void getFifoGyroX_rads(size_t* size, float* data);
-	void getFifoGyroY_rads(size_t* size, float* data);
-	void getFifoGyroZ_rads(size_t* size, float* data);
-	void getFifoMagX_uT(size_t* size, float* data);
-	void getFifoMagY_uT(size_t* size, float* data);
-	void getFifoMagZ_uT(size_t* size, float* data);
-	void getFifoTemperature_C(size_t* size, float* data);
-
-protected:
-	// fifo
-	bool _enFifoAccel, _enFifoGyro, _enFifoMag, _enFifoTemp;
-	size_t _fifoSize, _fifoFrameSize;
-	float _axFifo[85], _ayFifo[85], _azFifo[85];
-	size_t _aSize;
-	float _gxFifo[85], _gyFifo[85], _gzFifo[85];
-	size_t _gSize;
-	float _hxFifo[73], _hyFifo[73], _hzFifo[73];
-	size_t _hSize;
-	float _tFifo[256];
-	size_t _tSize;
 };
 
 #endif

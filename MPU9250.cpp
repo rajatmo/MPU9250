@@ -1,6 +1,15 @@
 #include "MPU9250.h"
 #include <cstdint>
 
+
+/*
+*===============================================================
+*			The bare minimum: read/write registers
+*
+*===============================================================
+*/
+
+
 // Constructor
 MPU9250::MPU9250(I2C& bus, uint8_t address) {
 	_i2c = &bus;        // I2C bus
@@ -101,6 +110,53 @@ int MPU9250::whoAmIAK8963() {
 	}
 	// return the register value
 	return _buffer[0];
+}
+
+/*
+*===============================================================
+*						Configuration
+*
+*===============================================================
+*/
+
+/* sets the accelerometer full scale range to values other than default */
+int MPU9250::setAccelRange(AccelRange range) {
+	switch (range) {
+	case ACCEL_RANGE_2G: {
+		// setting the accel range to 2G
+		if (writeRegister(ACCEL_CONFIG, ACCEL_FS_SEL_2G) < 0) {
+			return -1;
+		}
+		_accelScale = G * 2.0f / 32767.5f; // setting the accel scale to 2G
+		break;
+	}
+	case ACCEL_RANGE_4G: {
+		// setting the accel range to 4G
+		if (writeRegister(ACCEL_CONFIG, ACCEL_FS_SEL_4G) < 0) {
+			return -1;
+		}
+		_accelScale = G * 4.0f / 32767.5f; // setting the accel scale to 4G
+		break;
+	}
+	case ACCEL_RANGE_8G: {
+		// setting the accel range to 8G
+		if (writeRegister(ACCEL_CONFIG, ACCEL_FS_SEL_8G) < 0) {
+			return -1;
+		}
+		_accelScale = G * 8.0f / 32767.5f; // setting the accel scale to 8G
+		break;
+	}
+	case ACCEL_RANGE_16G: {
+		// setting the accel range to 16G
+		if (writeRegister(ACCEL_CONFIG, ACCEL_FS_SEL_16G) < 0) {
+			return -1;
+		}
+		_accelScale = G * 16.0f / 32767.5f; // setting the accel scale to 16G
+		break;
+	}
+	}
+	_accelRange = range;
+	return 1;
 }
 
 /* sets the gyro full scale range to values other than default */
@@ -262,121 +318,12 @@ int MPU9250::setSrd(uint8_t srd) {
 	return 1;
 }
 
-/* reads the most current data from MPU9250 and stores in buffer */
-int MPU9250::readSensor() {
-	// grab the data from the MPU9250
-	if (readRegisters(ACCEL_OUT, 21, _buffer) < 0) {
-		return -1;
-	}
-	// combine into 16 bit values
-	_axcounts = (((int16_t)_buffer[0]) << 8) | _buffer[1];
-	_aycounts = (((int16_t)_buffer[2]) << 8) | _buffer[3];
-	_azcounts = (((int16_t)_buffer[4]) << 8) | _buffer[5];
-	_tcounts = (((int16_t)_buffer[6]) << 8) | _buffer[7];
-	_gxcounts = (((int16_t)_buffer[8]) << 8) | _buffer[9];
-	_gycounts = (((int16_t)_buffer[10]) << 8) | _buffer[11];
-	_gzcounts = (((int16_t)_buffer[12]) << 8) | _buffer[13];
-	_hxcounts = (((int16_t)_buffer[15]) << 8) | _buffer[14];
-	_hycounts = (((int16_t)_buffer[17]) << 8) | _buffer[16];
-	_hzcounts = (((int16_t)_buffer[19]) << 8) | _buffer[18];
-	// transform and convert to float values
-	_ax = (((float)(tX[0] * _axcounts + tX[1] * _aycounts + tX[2] * _azcounts) *
-		_accelScale) -
-		_axb) *
-		_axs;
-	_ay = (((float)(tY[0] * _axcounts + tY[1] * _aycounts + tY[2] * _azcounts) *
-		_accelScale) -
-		_ayb) *
-		_ays;
-	_az = (((float)(tZ[0] * _axcounts + tZ[1] * _aycounts + tZ[2] * _azcounts) *
-		_accelScale) -
-		_azb) *
-		_azs;
-	_gx = ((float)(tX[0] * _gxcounts + tX[1] * _gycounts + tX[2] * _gzcounts) *
-		_gyroScale) -
-		_gxb;
-	_gy = ((float)(tY[0] * _gxcounts + tY[1] * _gycounts + tY[2] * _gzcounts) *
-		_gyroScale) -
-		_gyb;
-	_gz = ((float)(tZ[0] * _gxcounts + tZ[1] * _gycounts + tZ[2] * _gzcounts) *
-		_gyroScale) -
-		_gzb;
-	_hx = (((float)(_hxcounts)*_magScaleX) - _hxb) * _hxs;
-	_hy = (((float)(_hycounts)*_magScaleY) - _hyb) * _hys;
-	_hz = (((float)(_hzcounts)*_magScaleZ) - _hzb) * _hzs;
-	_t = ((((float)_tcounts) - _tempOffset) / _tempScale) + _tempOffset;
-	return 1;
-}
-
-/* returns the accelerometer measurement in the x direction, m/s/s */
-float MPU9250::getAccelX_mss() { return _ax; }
-
-/* returns the accelerometer measurement in the y direction, m/s/s */
-float MPU9250::getAccelY_mss() { return _ay; }
-
-/* returns the accelerometer measurement in the z direction, m/s/s */
-float MPU9250::getAccelZ_mss() { return _az; }
-
-/* returns the gyroscope measurement in the x direction, rad/s */
-float MPU9250::getGyroX_rads() { return _gx; }
-
-/* returns the gyroscope measurement in the y direction, rad/s */
-float MPU9250::getGyroY_rads() { return _gy; }
-
-/* returns the gyroscope measurement in the z direction, rad/s */
-float MPU9250::getGyroZ_rads() { return _gz; }
-
-/* returns the magnetometer measurement in the x direction, uT */
-float MPU9250::getMagX_uT() { return _hx; }
-
-/* returns the magnetometer measurement in the y direction, uT */
-float MPU9250::getMagY_uT() { return _hy; }
-
-/* returns the magnetometer measurement in the z direction, uT */
-float MPU9250::getMagZ_uT() { return _hz; }
-
-/* returns the die temperature, C */
-float MPU9250::getTemperature_C() { return _t; }
-/* estimates the gyro biases */
-int MPU9250::calibrateGyro() {
-	// set the range, bandwidth, and srd
-	if (setGyroRange(GYRO_RANGE_250DPS) < 0) {
-		return -1;
-	}
-	if (setDlpfBandwidth(DLPF_BANDWIDTH_20HZ) < 0) {
-		return -2;
-	}
-	if (setSrd(19) < 0) {
-		return -3;
-	}
-
-	// take samples and find bias
-	_gxbD = 0;
-	_gybD = 0;
-	_gzbD = 0;
-	for (size_t i = 0; i < _numSamples; i++) {
-		readSensor();
-		_gxbD += (getGyroX_rads() + _gxb) / ((double)_numSamples);
-		_gybD += (getGyroY_rads() + _gyb) / ((double)_numSamples);
-		_gzbD += (getGyroZ_rads() + _gzb) / ((double)_numSamples);
-		ThisThread::sleep_for(20ms);
-	}
-	_gxb = (float)_gxbD;
-	_gyb = (float)_gybD;
-	_gzb = (float)_gzbD;
-
-	// set the range, bandwidth, and srd back to what they were
-	if (setGyroRange(_gyroRange) < 0) {
-		return -4;
-	}
-	if (setDlpfBandwidth(_bandwidth) < 0) {
-		return -5;
-	}
-	if (setSrd(_srd) < 0) {
-		return -6;
-	}
-	return 1;
-}
+/*
+*===============================================================
+*				IMU init and getting data
+*
+*===============================================================
+*/
 
 /* starts communication with the MPU-9250 */
 int MPU9250::begin() {
@@ -494,5 +441,441 @@ int MPU9250::begin() {
 		return -20;
 	}
 	// successful init, return 1
+	return 1;
+}
+
+
+/* reads the most current data from MPU9250 and stores in buffer */
+int MPU9250::readSensor() {
+	// grab the data from the MPU9250
+	if (readRegisters(ACCEL_OUT, 21, _buffer) < 0) {
+		return -1;
+	}
+	// combine into 16 bit values
+	_axcounts = (((int16_t)_buffer[0]) << 8) | _buffer[1];
+	_aycounts = (((int16_t)_buffer[2]) << 8) | _buffer[3];
+	_azcounts = (((int16_t)_buffer[4]) << 8) | _buffer[5];
+	_tcounts = (((int16_t)_buffer[6]) << 8) | _buffer[7];
+	_gxcounts = (((int16_t)_buffer[8]) << 8) | _buffer[9];
+	_gycounts = (((int16_t)_buffer[10]) << 8) | _buffer[11];
+	_gzcounts = (((int16_t)_buffer[12]) << 8) | _buffer[13];
+	_hxcounts = (((int16_t)_buffer[15]) << 8) | _buffer[14];
+	_hycounts = (((int16_t)_buffer[17]) << 8) | _buffer[16];
+	_hzcounts = (((int16_t)_buffer[19]) << 8) | _buffer[18];
+	// transform and convert to float values
+	_ax = (((float)(tX[0] * _axcounts + tX[1] * _aycounts + tX[2] * _azcounts) *
+		_accelScale) -
+		_axb) *
+		_axs;
+	_ay = (((float)(tY[0] * _axcounts + tY[1] * _aycounts + tY[2] * _azcounts) *
+		_accelScale) -
+		_ayb) *
+		_ays;
+	_az = (((float)(tZ[0] * _axcounts + tZ[1] * _aycounts + tZ[2] * _azcounts) *
+		_accelScale) -
+		_azb) *
+		_azs;
+	_gx = ((float)(tX[0] * _gxcounts + tX[1] * _gycounts + tX[2] * _gzcounts) *
+		_gyroScale) -
+		_gxb;
+	_gy = ((float)(tY[0] * _gxcounts + tY[1] * _gycounts + tY[2] * _gzcounts) *
+		_gyroScale) -
+		_gyb;
+	_gz = ((float)(tZ[0] * _gxcounts + tZ[1] * _gycounts + tZ[2] * _gzcounts) *
+		_gyroScale) -
+		_gzb;
+	_hx = (((float)(_hxcounts)*_magScaleX) - _hxb) * _hxs;
+	_hy = (((float)(_hycounts)*_magScaleY) - _hyb) * _hys;
+	_hz = (((float)(_hzcounts)*_magScaleZ) - _hzb) * _hzs;
+	_t = ((((float)_tcounts) - _tempOffset) / _tempScale) + _tempOffset;
+	return 1;
+}
+
+/*
+*===============================================================
+*					Getters/setters
+*
+*===============================================================
+*/
+
+//========================Measurements==========================
+/* returns the accelerometer measurement in the x direction, m/s/s */
+float MPU9250::getAccelX_mss() { return _ax; }
+
+/* returns the accelerometer measurement in the y direction, m/s/s */
+float MPU9250::getAccelY_mss() { return _ay; }
+
+/* returns the accelerometer measurement in the z direction, m/s/s */
+float MPU9250::getAccelZ_mss() { return _az; }
+
+/* returns the gyroscope measurement in the x direction, rad/s */
+float MPU9250::getGyroX_rads() { return _gx; }
+
+/* returns the gyroscope measurement in the y direction, rad/s */
+float MPU9250::getGyroY_rads() { return _gy; }
+
+/* returns the gyroscope measurement in the z direction, rad/s */
+float MPU9250::getGyroZ_rads() { return _gz; }
+
+/* returns the magnetometer measurement in the x direction, uT */
+float MPU9250::getMagX_uT() { return _hx; }
+
+/* returns the magnetometer measurement in the y direction, uT */
+float MPU9250::getMagY_uT() { return _hy; }
+
+/* returns the magnetometer measurement in the z direction, uT */
+float MPU9250::getMagZ_uT() { return _hz; }
+
+/* returns the die temperature, C */
+float MPU9250::getTemperature_C() { return _t; }
+
+//======================Biases/Scale-factors=====================
+
+/* returns the accelerometer bias in the X direction, m/s/s */
+float MPU9250::getAccelBiasX_mss() {
+	return _axb;
+}
+
+/* returns the accelerometer scale factor in the X direction */
+float MPU9250::getAccelScaleFactorX() {
+	return _axs;
+}
+
+/* returns the accelerometer bias in the Y direction, m/s/s */
+float MPU9250::getAccelBiasY_mss() {
+	return _ayb;
+}
+
+/* returns the accelerometer scale factor in the Y direction */
+float MPU9250::getAccelScaleFactorY() {
+	return _ays;
+}
+
+/* returns the accelerometer bias in the Z direction, m/s/s */
+float MPU9250::getAccelBiasZ_mss() {
+	return _azb;
+}
+
+/* returns the accelerometer scale factor in the Z direction */
+float MPU9250::getAccelScaleFactorZ() {
+	return _azs;
+}
+
+/* sets the accelerometer bias (m/s/s) and scale factor in the X direction */
+void MPU9250::setAccelCalX(float bias, float scaleFactor) {
+	_axb = bias;
+	_axs = scaleFactor;
+}
+
+/* sets the accelerometer bias (m/s/s) and scale factor in the Y direction */
+void MPU9250::setAccelCalY(float bias, float scaleFactor) {
+	_ayb = bias;
+	_ays = scaleFactor;
+}
+
+/* sets the accelerometer bias (m/s/s) and scale factor in the Z direction */
+void MPU9250::setAccelCalZ(float bias, float scaleFactor) {
+	_azb = bias;
+	_azs = scaleFactor;
+}
+
+/* returns the gyro bias in the X direction, rad/s */
+float MPU9250::getGyroBiasX_rads() {
+	return _gxb;
+}
+
+/* returns the gyro bias in the Y direction, rad/s */
+float MPU9250::getGyroBiasY_rads() {
+	return _gyb;
+}
+
+/* returns the gyro bias in the Z direction, rad/s */
+float MPU9250::getGyroBiasZ_rads() {
+	return _gzb;
+}
+
+/* sets the gyro bias in the X direction to bias, rad/s */
+void MPU9250::setGyroBiasX_rads(float bias) {
+	_gxb = bias;
+}
+
+/* sets the gyro bias in the Y direction to bias, rad/s */
+void MPU9250::setGyroBiasY_rads(float bias) {
+	_gyb = bias;
+}
+
+/* sets the gyro bias in the Z direction to bias, rad/s */
+void MPU9250::setGyroBiasZ_rads(float bias) {
+	_gzb = bias;
+}
+
+
+/* returns the magnetometer bias in the X direction, uT */
+float MPU9250::getMagBiasX_uT() {
+	return _hxb;
+}
+
+/* returns the magnetometer scale factor in the X direction */
+float MPU9250::getMagScaleFactorX() {
+	return _hxs;
+}
+
+/* returns the magnetometer bias in the Y direction, uT */
+float MPU9250::getMagBiasY_uT() {
+	return _hyb;
+}
+
+/* returns the magnetometer scale factor in the Y direction */
+float MPU9250::getMagScaleFactorY() {
+	return _hys;
+}
+
+/* returns the magnetometer bias in the Z direction, uT */
+float MPU9250::getMagBiasZ_uT() {
+	return _hzb;
+}
+
+/* returns the magnetometer scale factor in the Z direction */
+float MPU9250::getMagScaleFactorZ() {
+	return _hzs;
+}
+
+/* sets the magnetometer bias (uT) and scale factor in the X direction */
+void MPU9250::setMagCalX(float bias, float scaleFactor) {
+	_hxb = bias;
+	_hxs = scaleFactor;
+}
+
+/* sets the magnetometer bias (uT) and scale factor in the Y direction */
+void MPU9250::setMagCalY(float bias, float scaleFactor) {
+	_hyb = bias;
+	_hys = scaleFactor;
+}
+
+/* sets the magnetometer bias (uT) and scale factor in the Z direction */
+void MPU9250::setMagCalZ(float bias, float scaleFactor) {
+	_hzb = bias;
+	_hzs = scaleFactor;
+}
+
+
+
+/*
+*===============================================================
+*						Calibration
+*
+*===============================================================
+*/
+
+
+/* finds bias and scale factor calibration for the accelerometer,
+this should be run for each axis in each direction (6 total) to find
+the min and max values along each */
+int MPU9250::calibrateAccel() {
+	// set the range, bandwidth, and srd
+	if (setAccelRange(ACCEL_RANGE_2G) < 0) {
+		return -1;
+	}
+	if (setDlpfBandwidth(DLPF_BANDWIDTH_20HZ) < 0) {
+		return -2;
+	}
+	if (setSrd(19) < 0) {
+		return -3;
+	}
+
+	// take samples and find min / max 
+	_axbD = 0;
+	_aybD = 0;
+	_azbD = 0;
+	for (size_t i = 0; i < _numSamples; i++) {
+		readSensor();
+		_axbD += (getAccelX_mss() / _axs + _axb) / ((double)_numSamples);
+		_aybD += (getAccelY_mss() / _ays + _ayb) / ((double)_numSamples);
+		_azbD += (getAccelZ_mss() / _azs + _azb) / ((double)_numSamples);
+		ThisThread::sleep_for(20ms);
+	}
+	if (_axbD > 9.0f) {
+		_axmax = (float)_axbD;
+	}
+	if (_aybD > 9.0f) {
+		_aymax = (float)_aybD;
+	}
+	if (_azbD > 9.0f) {
+		_azmax = (float)_azbD;
+	}
+	if (_axbD < -9.0f) {
+		_axmin = (float)_axbD;
+	}
+	if (_aybD < -9.0f) {
+		_aymin = (float)_aybD;
+	}
+	if (_azbD < -9.0f) {
+		_azmin = (float)_azbD;
+	}
+
+	// find bias and scale factor
+	if ((abs(_axmin) > 9.0f) && (abs(_axmax) > 9.0f)) {
+		_axb = (_axmin + _axmax) / 2.0f;
+		_axs = G / ((abs(_axmin) + abs(_axmax)) / 2.0f);
+	}
+	if ((abs(_aymin) > 9.0f) && (abs(_aymax) > 9.0f)) {
+		_ayb = (_aymin + _aymax) / 2.0f;
+		_ays = G / ((abs(_aymin) + abs(_aymax)) / 2.0f);
+	}
+	if ((abs(_azmin) > 9.0f) && (abs(_azmax) > 9.0f)) {
+		_azb = (_azmin + _azmax) / 2.0f;
+		_azs = G / ((abs(_azmin) + abs(_azmax)) / 2.0f);
+	}
+
+	// set the range, bandwidth, and srd back to what they were
+	if (setAccelRange(_accelRange) < 0) {
+		return -4;
+	}
+	if (setDlpfBandwidth(_bandwidth) < 0) {
+		return -5;
+	}
+	if (setSrd(_srd) < 0) {
+		return -6;
+	}
+	return 1;
+}
+
+
+/* estimates the gyro biases */
+int MPU9250::calibrateGyro() {
+	// set the range, bandwidth, and srd
+	if (setGyroRange(GYRO_RANGE_250DPS) < 0) {
+		return -1;
+	}
+	if (setDlpfBandwidth(DLPF_BANDWIDTH_20HZ) < 0) {
+		return -2;
+	}
+	if (setSrd(19) < 0) {
+		return -3;
+	}
+
+	// take samples and find bias
+	_gxbD = 0;
+	_gybD = 0;
+	_gzbD = 0;
+	for (size_t i = 0; i < _numSamples; i++) {
+		readSensor();
+		_gxbD += (getGyroX_rads() + _gxb) / ((double)_numSamples);
+		_gybD += (getGyroY_rads() + _gyb) / ((double)_numSamples);
+		_gzbD += (getGyroZ_rads() + _gzb) / ((double)_numSamples);
+		ThisThread::sleep_for(20ms);
+	}
+	_gxb = (float)_gxbD;
+	_gyb = (float)_gybD;
+	_gzb = (float)_gzbD;
+
+	// set the range, bandwidth, and srd back to what they were
+	if (setGyroRange(_gyroRange) < 0) {
+		return -4;
+	}
+	if (setDlpfBandwidth(_bandwidth) < 0) {
+		return -5;
+	}
+	if (setSrd(_srd) < 0) {
+		return -6;
+	}
+	return 1;
+}
+
+/* finds bias and scale factor calibration for the magnetometer,
+the sensor should be rotated in a figure 8 motion until complete */
+int MPU9250::calibrateMag() {
+	// set the srd
+	if (setSrd(19) < 0) {
+		return -1;
+	}
+
+	// get a starting set of data
+	readSensor();
+	_hxmax = getMagX_uT();
+	_hxmin = getMagX_uT();
+	_hymax = getMagY_uT();
+	_hymin = getMagY_uT();
+	_hzmax = getMagZ_uT();
+	_hzmin = getMagZ_uT();
+
+	// collect data to find max / min in each channel
+	_counter = 0;
+	while (_counter < _maxCounts) {
+		_delta = 0.0f;
+		_framedelta = 0.0f;
+		readSensor();
+		_hxfilt = (_hxfilt * ((float)_coeff - 1) + (getMagX_uT() / _hxs + _hxb)) / ((float)_coeff);
+		_hyfilt = (_hyfilt * ((float)_coeff - 1) + (getMagY_uT() / _hys + _hyb)) / ((float)_coeff);
+		_hzfilt = (_hzfilt * ((float)_coeff - 1) + (getMagZ_uT() / _hzs + _hzb)) / ((float)_coeff);
+		if (_hxfilt > _hxmax) {
+			_delta = _hxfilt - _hxmax;
+			_hxmax = _hxfilt;
+		}
+		if (_delta > _framedelta) {
+			_framedelta = _delta;
+		}
+		if (_hyfilt > _hymax) {
+			_delta = _hyfilt - _hymax;
+			_hymax = _hyfilt;
+		}
+		if (_delta > _framedelta) {
+			_framedelta = _delta;
+		}
+		if (_hzfilt > _hzmax) {
+			_delta = _hzfilt - _hzmax;
+			_hzmax = _hzfilt;
+		}
+		if (_delta > _framedelta) {
+			_framedelta = _delta;
+		}
+		if (_hxfilt < _hxmin) {
+			_delta = abs(_hxfilt - _hxmin);
+			_hxmin = _hxfilt;
+		}
+		if (_delta > _framedelta) {
+			_framedelta = _delta;
+		}
+		if (_hyfilt < _hymin) {
+			_delta = abs(_hyfilt - _hymin);
+			_hymin = _hyfilt;
+		}
+		if (_delta > _framedelta) {
+			_framedelta = _delta;
+		}
+		if (_hzfilt < _hzmin) {
+			_delta = abs(_hzfilt - _hzmin);
+			_hzmin = _hzfilt;
+		}
+		if (_delta > _framedelta) {
+			_framedelta = _delta;
+		}
+		if (_framedelta > _deltaThresh) {
+			_counter = 0;
+		}
+		else {
+			_counter++;
+		}
+		ThisThread::sleep_for(20ms);
+	}
+
+	// find the magnetometer bias
+	_hxb = (_hxmax + _hxmin) / 2.0f;
+	_hyb = (_hymax + _hymin) / 2.0f;
+	_hzb = (_hzmax + _hzmin) / 2.0f;
+
+	// find the magnetometer scale factor
+	_hxs = (_hxmax - _hxmin) / 2.0f;
+	_hys = (_hymax - _hymin) / 2.0f;
+	_hzs = (_hzmax - _hzmin) / 2.0f;
+	_avgs = (_hxs + _hys + _hzs) / 3.0f;
+	_hxs = _avgs / _hxs;
+	_hys = _avgs / _hys;
+	_hzs = _avgs / _hzs;
+
+	// set the srd back to what it was
+	if (setSrd(_srd) < 0) {
+		return -2;
+	}
 	return 1;
 }
