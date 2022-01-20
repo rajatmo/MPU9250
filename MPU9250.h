@@ -128,7 +128,7 @@ protected:
 	DlpfBandwidth _bandwidth;
 	uint8_t _srd;
 	// gyro bias estimation
-	size_t _numSamples = 100;
+	size_t _numSamples = 1000;
 	double _gxbD, _gybD, _gzbD;
 	float _gxb, _gyb, _gzb;
 	// accel bias and scale factor estimation
